@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="GBK"?>
+<configuration scan="true">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{30}.%method - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.sohu.cache" level="DEBUG"/>
+
+    <root>
+        <level value="WARN"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

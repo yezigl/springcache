@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="com.sohu.cache"/>
+
+    <cache:annotation-driven cache-manager="springcacheManager" />
+
+    <!-- for redis -->
+    <!-- <bean id="springcacheManager" class="com.sohu.cache.springcache.jedis.JedisCacheManager">
+        <property name="namedClients">
+            <map>
+                <entry key="default" value="192.168.106.23:6384 192.168.106.23:6385" />
+            </map>
+        </property>
+        <property name="cacheStoreJedisHashRouter">
+            <bean class="com.sohu.cache.springcache.CacheStoreJedisHashRouter" />
+        </property>
+        <property name="serializer">
+            <bean class="com.sohu.cache.common.JsonSerializer" />
+        </property>
+        <property name="expires" value="604800" />
+        <property name="maxActive" value="100" />
+        <property name="testOnBorrow" value="true" />
+    </bean> -->
+
+    <!-- for memcached -->
+    <bean id="springcacheManager" class="com.sohu.cache.springcache.xmemcached.XmemCacheManager">
+        <property name="namedClients">
+            <map>
+                <entry key="default" value="10.11.157.142:11211 10.11.157.142:11212" />
+            </map>
+        </property>
+        <property name="serializer">
+            <bean class="com.sohu.cache.common.JsonSerializer" />
+        </property>
+        <property name="expires" value="604800" />
+        <property name="maxConn" value="1" />
+        <property name="consistent" value="true" />
+    </bean>
+</beans>

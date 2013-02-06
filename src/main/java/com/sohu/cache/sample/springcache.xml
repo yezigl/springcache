@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:cache="http://www.springframework.org/schema/cache"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <cache:annotation-driven cache-manager="springcacheManager" />
+
+    <!-- for redis -->
+    <bean id="springcacheManager" class="com.sohu.cache.springcache.jedis.JedisCacheManager">
+        <property name="namedClients">
+            <map>
+                <entry key="default" value="127.0.0.1:6379 127.0.0.1:6380" /><!-- separate by space -->
+            </map>
+        </property>
+        <property name="cacheStoreJedisHashRouter">
+            <bean class="com.sohu.cache.springcache.CacheStoreJedisHashRouter" />
+        </property>
+        <property name="serializer">
+            <bean class="com.sohu.cache.common.JsonSerializer" />
+        </property>
+        <property name="expires" value="604800" /><!--7 days, second -->
+        <property name="maxActive" value="100" />
+        <property name="testOnBorrow" value="true" />
+    </bean>
+
+    <!-- for memcached -->
+    <bean id="springcacheManager" class="com.sohu.cache.springcache.xmemcached.XmemCacheManager">
+        <property name="namedClients">
+            <map>
+                <entry key="default" value="127.0.0.1:11211 127.0.0.1:11212" /><!-- separate by space -->
+            </map>
+        </property>
+        <property name="serializer">
+            <bean class="com.sohu.cache.common.JsonSerializer" />
+        </property>
+        <property name="expires" value="604800" /><!--7 days, second -->
+        <property name="maxConn" value="8" />
+        <property name="consistent" value="true" /><!-- nginx consitent hash -->
+    </bean>
+    
+</beans>

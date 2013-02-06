@@ -35,6 +35,7 @@
     <scm>
         <url>git@github.com:yezigl/springcache.git</url>
         <connection>scm:git:git@github.com:yezigl/springcache.git</connection>
+        <developerConnection>scm:git:git@github.com:yezigl/springcache.git</developerConnection>
     </scm>
 
     <build>

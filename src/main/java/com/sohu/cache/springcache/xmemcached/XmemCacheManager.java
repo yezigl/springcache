@@ -26,7 +26,7 @@ import com.sohu.cache.common.Serializer;
  * 基于xmemcached的spring cacheManager的实现
  * 
  * @author xiaobinghan
- * @version 1.0.1 2013-2-5
+ * @version 1.1.0 2013-2-5
  */
 public class XmemCacheManager extends AbstractCacheManager implements DisposableBean {
     

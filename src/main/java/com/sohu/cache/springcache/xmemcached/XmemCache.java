@@ -17,7 +17,7 @@ import com.sohu.cache.springcache.jedis.JedisCache;
  * 基于xmemcached的spring cache的实现
  * 
  * @author lukeli
- * @version 1.0.1 2013-2-5
+ * @version 1.1.0 2013-2-5
  */
 public class XmemCache implements Cache {
 

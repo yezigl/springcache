@@ -40,13 +40,16 @@ Usage:
         <property name="consistent" value="true" /><!-- nginx consitent hash -->
     </bean>
     
-    jar:
+Dependency:
+
+    <!-- redis -->
     <dependency>
         <groupId>redis.clients</groupId>
         <artifactId>jedis</artifactId>
         <version>2.1.0</version>
     </dependency>
-    or
+    
+    <!-- memcached -->
     <dependency>
         <groupId>com.googlecode.xmemcached</groupId>
         <artifactId>xmemcached</artifactId>

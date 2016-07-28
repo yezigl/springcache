@@ -15,24 +15,20 @@ public class JsonSerializer implements Serializer {
 
     @Override
     public String toString(Object object) {
-        return object == null ? null : new StringBuilder()
-                .append(object.getClass().getName())
-                .append(CLASS_OBJECT_BREAKER)
-                .append(JSON.toJSONString(object, SerializerFeature.WriteClassName))
-                .toString();
+        return JSON.toJSONString(object, SerializerFeature.WriteClassName);
     }
 
     @Override
-    public Object toObject(String string) throws ClassNotFoundException {
+    public Object toObject(String string) {
         if (string == null || string.trim().length() == 0) {
             return null;
         }
+        // 兼容1.1.0
         String[] classObjectPairs = string.split(CLASS_OBJECT_BREAKER, 2);
-        if (classObjectPairs.length != 2) {
-            throw new ClassNotFoundException("classObjectPairs length is not 2\n" + string);
+        if (classObjectPairs.length == 2) {
+            string = classObjectPairs[1];
         }
-        Class<?> clazz = Class.forName(classObjectPairs[0]);
-        //noinspection unchecked
-        return JSON.parseObject(classObjectPairs[1], clazz);
+        
+        return JSON.parseObject(string);
     }
 }

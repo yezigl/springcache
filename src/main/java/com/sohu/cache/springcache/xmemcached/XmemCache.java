@@ -2,16 +2,15 @@ package com.sohu.cache.springcache.xmemcached;
 
 import java.util.concurrent.TimeoutException;
 
-import net.rubyeye.xmemcached.MemcachedClient;
-import net.rubyeye.xmemcached.exception.MemcachedException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.cache.support.SimpleValueWrapper;
+import org.springframework.cache.support.AbstractValueAdaptingCache;
 
 import com.sohu.cache.common.Serializer;
 import com.sohu.cache.springcache.jedis.JedisCache;
+
+import net.rubyeye.xmemcached.MemcachedClient;
+import net.rubyeye.xmemcached.exception.MemcachedException;
 
 /**
  * 基于xmemcached的spring cache的实现
@@ -19,7 +18,7 @@ import com.sohu.cache.springcache.jedis.JedisCache;
  * @author lukeli
  * @version 1.1.0 2013-2-5
  */
-public class XmemCache implements Cache {
+public class XmemCache extends AbstractValueAdaptingCache {
 
     private static final Logger logger = LoggerFactory.getLogger(JedisCache.class);
     private String name;
@@ -28,6 +27,7 @@ public class XmemCache implements Cache {
     private int expires;
 
     public XmemCache(String name, MemcachedClient memcachedClient, Serializer serializer, int expires) {
+        super(false);
         this.name = name;
         this.memcachedClient = memcachedClient;
         this.serializer = serializer;
@@ -49,32 +49,27 @@ public class XmemCache implements Cache {
     }
 
     @Override
-    public ValueWrapper get(Object key) {
+    public Object lookup(Object key) {
         if (key != null) {
             String uniqueKey = uniqueKey(key);
             try {
                 String valueSerial = memcachedClient.get(uniqueKey);
                 if (valueSerial != null) {
-                    Object value = null;
-                    try {
-                        value = serializer.toObject(valueSerial);
-                    } catch (ClassNotFoundException e) {
-                        logger.error("", e);
-                    }
+                    Object value = serializer.toObject(valueSerial);
                     logger.debug("uniqueKey={}, valueSerial={}", new Object[] { uniqueKey, valueSerial });
                     if (value != null) {
-                        logger.info("Cache {} key {} hit.", name, key);
-                        return new SimpleValueWrapper(value);
+                        logger.debug("Cache {} key {} hit.", name, key);
+                        return value;
                     } else {
-                        logger.warn("Cache {} key {} miss.", name, key);
+                        logger.debug("Cache {} key {} miss.", name, key);
                     }
                 }
             } catch (TimeoutException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (InterruptedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (MemcachedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             }
         }
         return null;
@@ -90,13 +85,19 @@ public class XmemCache implements Cache {
                 logger.debug("uniqueKey={}, expires={}, valueSerial={}, result={}", new Object[] { uniqueKey, expires,
                         valueSerial, result });
             } catch (TimeoutException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (InterruptedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (MemcachedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             }
         }
+    }
+    
+    @Override
+    public ValueWrapper putIfAbsent(Object key, Object value) {
+        put(key, value);
+        return null;
     }
 
     @Override
@@ -107,11 +108,11 @@ public class XmemCache implements Cache {
                 boolean result = memcachedClient.delete(uniqueKey);
                 logger.debug("uniqueKey={}, result={}", new Object[] { uniqueKey, result });
             } catch (TimeoutException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (InterruptedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             } catch (MemcachedException e) {
-                logger.error("", e);
+                logger.error("{}", e.getMessage(), e);
             }
         }
     }
@@ -122,11 +123,11 @@ public class XmemCache implements Cache {
             memcachedClient.flushAll();
             logger.debug("flushall");
         } catch (TimeoutException e) {
-            logger.error("", e);
+            logger.error("{}", e.getMessage(), e);
         } catch (InterruptedException e) {
-            logger.error("", e);
+            logger.error("{}", e.getMessage(), e);
         } catch (MemcachedException e) {
-            logger.error("", e);
+            logger.error("{}", e.getMessage(), e);
         }
     }
 

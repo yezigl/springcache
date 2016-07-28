@@ -1,17 +1,18 @@
 package com.sohu.cache.springcache.jedis;
 
-import com.sohu.cache.common.Serializer;
-import com.sohu.cache.springcache.CacheStoreRouter;
+import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.cache.support.SimpleValueWrapper;
+import org.springframework.cache.support.AbstractValueAdaptingCache;
+
+import com.sohu.cache.common.Serializer;
+import com.sohu.cache.springcache.CacheStoreRouter;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * 基于jedis的spring cache的实现
@@ -19,7 +20,7 @@ import java.util.Set;
  * @author xiaobinghan
  * @version 1.0.0 2012-5-4
  */
-public class JedisCache implements Cache {
+public class JedisCache extends AbstractValueAdaptingCache {
     private static final Logger logger = LoggerFactory.getLogger(JedisCache.class);
     private String name;
     private List<JedisPool> jedisPoolList;
@@ -29,6 +30,7 @@ public class JedisCache implements Cache {
 
     public JedisCache(String name, List<JedisPool> jedisList, CacheStoreRouter<JedisPool> cacheStoreRouter,
             Serializer serializer, int expires) {
+        super(false);
         this.name = name;
         this.jedisPoolList = jedisList;
         this.cacheStoreRouter = cacheStoreRouter;
@@ -37,56 +39,13 @@ public class JedisCache implements Cache {
     }
 
     @Override
-    public Object getNativeCache() {
-        return jedisPoolList;
+    public String getName() {
+        return name;
     }
 
-    /**
-     * 实现@Cacheable注解
-     */
     @Override
-    public ValueWrapper get(Object key) {
-        if (key != null) {
-            JedisPool jedisPool = cacheStoreRouter.pickUp(jedisPoolList, name, key);
-            if (jedisPool != null) {
-                Jedis jedis = null;
-                boolean broken = false;
-                try {
-                    jedis = jedisPool.getResource();
-                    String uniqueKey = uniqueKey(key);
-                    String valueSerial = jedis.get(uniqueKey);
-                    Object value = null;
-                    try {
-                        value = serializer.toObject(valueSerial);
-                    } catch (ClassNotFoundException e) {
-                        logger.error("", e);
-                    }
-                    logger.debug("uniqueKey={}, valueSerial={}", new Object[] { uniqueKey, valueSerial });
-                    if (value != null) {
-                        logger.info("Cache {} key {} hit.", name, key);
-                        return new SimpleValueWrapper(value);
-                    } else {
-                        logger.warn("Cache {} key {} miss.", name, key);
-                    }
-                } catch (JedisConnectionException e) {
-                    logger.error("key={}", key, e);
-                    broken = true;
-                } finally {
-                    if (jedis != null) {
-                        if (broken) {
-                            jedisPool.returnBrokenResource(jedis);
-                        } else {
-                            jedisPool.returnResource(jedis);
-                        }
-                    }
-                }
-            } else {
-                logger.error("Cache store route error.");
-            }
-        } else {
-            logger.warn("Key is null.");
-        }
-        return null;
+    public Object getNativeCache() {
+        return jedisPoolList;
     }
 
     /**
@@ -98,7 +57,6 @@ public class JedisCache implements Cache {
             JedisPool jedisPool = cacheStoreRouter.pickUp(jedisPoolList, name, key);
             if (jedisPool != null) {
                 Jedis jedis = null;
-                boolean broken = false;
                 try {
                     jedis = jedisPool.getResource();
                     String uniqueKey = uniqueKey(key);
@@ -108,14 +66,9 @@ public class JedisCache implements Cache {
                             String.valueOf(expires), valueSerial, result });
                 } catch (JedisConnectionException e) {
                     logger.error("key={}", key, e);
-                    broken = true;
                 } finally {
                     if (jedis != null) {
-                        if (broken) {
-                            jedisPool.returnBrokenResource(jedis);
-                        } else {
-                            jedisPool.returnResource(jedis);
-                        }
+                        jedis.close();
                     }
                 }
             } else {
@@ -124,6 +77,12 @@ public class JedisCache implements Cache {
         } else {
             logger.warn("Key or value is null. Key={}, value={}", key, value);
         }
+    }
+
+    @Override
+    public ValueWrapper putIfAbsent(Object key, Object value) {
+        put(key, value);
+        return null;
     }
 
     /**
@@ -135,7 +94,6 @@ public class JedisCache implements Cache {
             JedisPool jedisPool = cacheStoreRouter.pickUp(jedisPoolList, name, key);
             if (jedisPool != null) {
                 Jedis jedis = null;
-                boolean broken = false;
                 try {
                     jedis = jedisPool.getResource();
                     String uniqueKey = uniqueKey(key);
@@ -144,14 +102,9 @@ public class JedisCache implements Cache {
                             new Object[] { uniqueKey, String.valueOf(removeCount) });
                 } catch (JedisConnectionException e) {
                     logger.error("key={}", key, e);
-                    broken = true;
                 } finally {
                     if (jedis != null) {
-                        if (broken) {
-                            jedisPool.returnBrokenResource(jedis);
-                        } else {
-                            jedisPool.returnResource(jedis);
-                        }
+                        jedis.close();
                     }
                 }
             } else {
@@ -168,7 +121,6 @@ public class JedisCache implements Cache {
         for (JedisPool jedisPool : jedisPoolList) {
             if (jedisPool != null) {
                 Jedis jedis = null;
-                boolean broken = false;
                 try {
                     jedis = jedisPool.getResource();
                     Set<String> keySet = jedis.keys(uniqueKey("*"));
@@ -177,15 +129,10 @@ public class JedisCache implements Cache {
                         deleteCount += jedis.del(keyArray);
                     }
                 } catch (JedisConnectionException e) {
-                    logger.error("", e);
-                    broken = true;
+                    logger.error("{}", e.getMessage(), e);
                 } finally {
                     if (jedis != null) {
-                        if (broken) {
-                            jedisPool.returnBrokenResource(jedis);
-                        } else {
-                            jedisPool.returnResource(jedis);
-                        }
+                        jedis.close();
                     }
                 }
             }
@@ -205,7 +152,36 @@ public class JedisCache implements Cache {
     }
 
     @Override
-    public String getName() {
-        return name;
+    protected Object lookup(Object key) {
+        if (key != null) {
+            JedisPool jedisPool = cacheStoreRouter.pickUp(jedisPoolList, name, key);
+            if (jedisPool != null) {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
+                    String uniqueKey = uniqueKey(key);
+                    String valueSerial = jedis.get(uniqueKey);
+                    Object value = serializer.toObject(valueSerial);
+                    logger.debug("uniqueKey={}, valueSerial={}", new Object[] { uniqueKey, valueSerial });
+                    if (value != null) {
+                        logger.debug("Cache {} key {} hit.", name, key);
+                        return value;
+                    } else {
+                        logger.warn("Cache {} key {} miss.", name, key);
+                    }
+                } catch (JedisConnectionException e) {
+                    logger.error("key={}", key, e);
+                } finally {
+                    if (jedis != null) {
+                        jedis.close();
+                    }
+                }
+            } else {
+                logger.error("Cache store route error.");
+            }
+        } else {
+            logger.warn("Key is null.");
+        }
+        return null;
     }
 }

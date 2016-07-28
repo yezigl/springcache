@@ -1,20 +1,22 @@
 package com.sohu.cache.springcache.jedis;
 
-import com.sohu.cache.common.JsonSerializer;
-import com.sohu.cache.common.Serializer;
-import com.sohu.cache.springcache.CacheStoreJedisHashRouter;
-import org.apache.commons.pool.impl.GenericObjectPool;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractCacheManager;
-import redis.clients.jedis.JedisPool;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import com.sohu.cache.common.JsonSerializer;
+import com.sohu.cache.common.Serializer;
+import com.sohu.cache.springcache.CacheStoreJedisHashRouter;
+
+import redis.clients.jedis.JedisPool;
 
 /**
  * 基于jedis的spring cacheManager的实现
@@ -36,7 +38,7 @@ public class JedisCacheManager extends AbstractCacheManager implements Disposabl
     
     private List<Cache> cacheList;
     private List<JedisPool> jedisPoolList;
-    private GenericObjectPool.Config config = new GenericObjectPool.Config();
+    private GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
     @Override
     public void afterPropertiesSet() {
@@ -119,107 +121,117 @@ public class JedisCacheManager extends AbstractCacheManager implements Disposabl
     }
 
     public int getMaxActive() {
-        return this.config.maxActive;
+        return this.config.getMaxTotal();
     }
 
     public void setMaxActive(int maxActive) {
-        this.config.maxActive = maxActive;
+        this.config.setMaxTotal(maxActive);
     }
 
     public int getMaxIdle() {
-        return this.config.maxIdle;
+        return this.config.getMaxIdle();
     }
 
     public void setMaxIdle(int maxIdle) {
-        this.config.maxIdle = maxIdle;
+        this.config.setMaxIdle(maxIdle);
     }
 
     public int getMinIdle() {
-        return this.config.minIdle;
+        return this.config.getMinIdle();
     }
 
     public void setMinIdle(int minIdle) {
-        this.config.minIdle = minIdle;
+        this.config.setMinIdle(minIdle);
     }
 
     public long getMaxWait() {
-        return this.config.maxWait;
+        return this.config.getMaxWaitMillis();
     }
 
     public void setMaxWait(long maxWait) {
-        this.config.maxWait = maxWait;
+        this.config.setMaxWaitMillis(maxWait);
+    }
+    
+    public boolean getBlockWhenExhausted() {
+        return this.config.getBlockWhenExhausted();
     }
 
-    public byte getWhenExhaustedAction() {
-        return this.config.whenExhaustedAction;
+    public void setBlockWhenExhausted(boolean blockWhenExhausted) {
+        this.config.setBlockWhenExhausted(blockWhenExhausted);
     }
 
-    public void setWhenExhaustedAction(byte whenExhaustedAction) {
-        this.config.whenExhaustedAction = whenExhaustedAction;
+    @Deprecated
+    public boolean getWhenExhaustedAction() {
+        return this.config.getBlockWhenExhausted();
+    }
+
+    @Deprecated
+    public void setWhenExhaustedAction(boolean blockWhenExhausted) {
+        this.config.setBlockWhenExhausted(blockWhenExhausted);
     }
 
     public boolean isTestOnBorrow() {
-        return this.config.testOnBorrow;
+        return this.config.getTestOnBorrow();
     }
 
     public void setTestOnBorrow(boolean testOnBorrow) {
-        this.config.testOnBorrow = testOnBorrow;
+        this.config.setTestOnBorrow(testOnBorrow);
     }
 
     public boolean isTestOnReturn() {
-        return this.config.testOnReturn;
+        return this.config.getTestOnReturn();
     }
 
     public void setTestOnReturn(boolean testOnReturn) {
-        this.config.testOnReturn = testOnReturn;
+        this.config.setTestOnReturn(testOnReturn);
     }
 
     public boolean isTestWhileIdle() {
-        return this.config.testWhileIdle;
+        return this.config.getTestWhileIdle();
     }
 
     public void setTestWhileIdle(boolean testWhileIdle) {
-        this.config.testWhileIdle = testWhileIdle;
+        this.config.setTestWhileIdle(testWhileIdle);
     }
 
     public long getTimeBetweenEvictionRunsMillis() {
-        return this.config.timeBetweenEvictionRunsMillis;
+        return this.config.getTimeBetweenEvictionRunsMillis();
     }
 
     public void setTimeBetweenEvictionRunsMillis(long timeBetweenEvictionRunsMillis) {
-        this.config.timeBetweenEvictionRunsMillis = timeBetweenEvictionRunsMillis;
+        this.config.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
     }
 
     public int getNumTestsPerEvictionRun() {
-        return this.config.numTestsPerEvictionRun;
+        return this.config.getNumTestsPerEvictionRun();
     }
 
     public void setNumTestsPerEvictionRun(int numTestsPerEvictionRun) {
-        this.config.numTestsPerEvictionRun = numTestsPerEvictionRun;
+        this.config.setNumTestsPerEvictionRun(numTestsPerEvictionRun);
     }
 
     public long getMinEvictableIdleTimeMillis() {
-        return this.config.minEvictableIdleTimeMillis;
+        return this.config.getMinEvictableIdleTimeMillis();
     }
 
     public void setMinEvictableIdleTimeMillis(long minEvictableIdleTimeMillis) {
-        this.config.minEvictableIdleTimeMillis = minEvictableIdleTimeMillis;
+        this.config.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);
     }
 
     public long getSoftMinEvictableIdleTimeMillis() {
-        return this.config.softMinEvictableIdleTimeMillis;
+        return this.config.getSoftMinEvictableIdleTimeMillis();
     }
 
     public void setSoftMinEvictableIdleTimeMillis(long softMinEvictableIdleTimeMillis) {
-        this.config.softMinEvictableIdleTimeMillis = softMinEvictableIdleTimeMillis;
+        this.config.setSoftMinEvictableIdleTimeMillis(softMinEvictableIdleTimeMillis);
     }
 
     public boolean isLifo() {
-        return this.config.lifo;
+        return this.config.getLifo();
     }
 
     public void setLifo(boolean lifo) {
-        this.config.lifo = lifo;
+        this.config.setLifo(lifo);
     }
 
     public int getTimeout() {

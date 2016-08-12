@@ -46,12 +46,12 @@ Dependency:
     <dependency>
         <groupId>redis.clients</groupId>
         <artifactId>jedis</artifactId>
-        <version>2.1.0</version>
+        <version>${jedis.version}</version>
     </dependency>
     
     <!-- memcached -->
     <dependency>
         <groupId>com.googlecode.xmemcached</groupId>
         <artifactId>xmemcached</artifactId>
-        <version>1.3.9</version>
+        <version>${xmemcached.version}</version>
     </dependency>

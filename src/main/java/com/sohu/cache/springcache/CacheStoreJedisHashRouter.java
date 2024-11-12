@@ -15,8 +15,8 @@ public class CacheStoreJedisHashRouter implements CacheStoreRouter<JedisPool> {
 
     @Override
     public JedisPool pickUp(List<JedisPool> cacheStores, String cacheName, Object key) {
-        int hashCode = new StringBuilder().append(cacheName).append(String.valueOf(key)).toString().hashCode();
-        logger.debug("cacheName={}, key={}, hashCode={}", new Object[] { cacheName, key, hashCode });
+        int hashCode = (cacheName + key).hashCode();
+        logger.debug("cacheName={}, key={}, hashCode={}", cacheName, key, hashCode);
         return cacheStores.get(Math.abs(hashCode) % cacheStores.size());
     }
 }

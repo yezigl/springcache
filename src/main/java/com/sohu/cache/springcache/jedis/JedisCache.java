@@ -2,6 +2,7 @@ package com.sohu.cache.springcache.jedis;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,23 @@ public class JedisCache extends AbstractValueAdaptingCache {
         return jedisPoolList;
     }
 
+    @Override
+    public <T> T get(Object key, Callable<T> callable) {
+        Object lookup = lookup(key);
+        if (lookup != null) {
+            return (T) lookup;
+        }
+        if (callable == null) {
+            return null;
+        }
+
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     /**
      * 实现@CachePut注解
      */
@@ -62,8 +80,7 @@ public class JedisCache extends AbstractValueAdaptingCache {
                     String uniqueKey = uniqueKey(key);
                     String valueSerial = serializer.toString(value);
                     String result = jedis.setex(uniqueKey, expires, valueSerial);
-                    logger.debug("uniqueKey={}, expires={}, valueSerial={}, result={}", new Object[] { uniqueKey,
-                            String.valueOf(expires), valueSerial, result });
+                    logger.debug("uniqueKey={}, expires={}, valueSerial={}, result={}", uniqueKey, expires, valueSerial, result);
                 } catch (JedisConnectionException e) {
                     logger.error("key={}", key, e);
                 } finally {
@@ -98,8 +115,7 @@ public class JedisCache extends AbstractValueAdaptingCache {
                     jedis = jedisPool.getResource();
                     String uniqueKey = uniqueKey(key);
                     long removeCount = jedis.del(uniqueKey);
-                    logger.debug("uniqueKey={}, removeCount={}",
-                            new Object[] { uniqueKey, String.valueOf(removeCount) });
+                    logger.debug("uniqueKey={}, removeCount={}", uniqueKey, removeCount);
                 } catch (JedisConnectionException e) {
                     logger.error("key={}", key, e);
                 } finally {
@@ -148,7 +164,7 @@ public class JedisCache extends AbstractValueAdaptingCache {
      * @return the unique key with cache name
      */
     private String uniqueKey(Object key) {
-        return new StringBuilder().append(this.name).append("#").append(String.valueOf(key)).toString();
+        return this.name + "#" + key;
     }
 
     @Override
@@ -162,7 +178,7 @@ public class JedisCache extends AbstractValueAdaptingCache {
                     String uniqueKey = uniqueKey(key);
                     String valueSerial = jedis.get(uniqueKey);
                     Object value = serializer.toObject(valueSerial);
-                    logger.debug("uniqueKey={}, valueSerial={}", new Object[] { uniqueKey, valueSerial });
+                    logger.debug("uniqueKey={}, valueSerial={}", uniqueKey, valueSerial);
                     if (value != null) {
                         logger.debug("Cache {} key {} hit.", name, key);
                         return value;

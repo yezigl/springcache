@@ -42,11 +42,11 @@ public class JedisCacheManager extends AbstractCacheManager implements Disposabl
 
     @Override
     public void afterPropertiesSet() {
-        if (this.namedClients == null || this.namedClients.size() == 0) {
+        if (this.namedClients == null || this.namedClients.isEmpty()) {
             throw new NullPointerException("Property namedClients must be set! Like \"default->127.0.0.1:6379\"");
         }
-        this.cacheList = new ArrayList<Cache>();
-        this.jedisPoolList = new ArrayList<JedisPool>();
+        this.cacheList = new ArrayList<>();
+        this.jedisPoolList = new ArrayList<>();
         if (this.cacheStoreJedisHashRouter == null) {
             this.cacheStoreJedisHashRouter = new CacheStoreJedisHashRouter();
         }
@@ -58,7 +58,7 @@ public class JedisCacheManager extends AbstractCacheManager implements Disposabl
             this.jedisPoolList.addAll(jedisPoolList);
             this.cacheList.add(new JedisCache(namedClient.getKey(), jedisPoolList, cacheStoreJedisHashRouter, serializer, this.expires));
         }
-        if (!namedClients.keySet().contains("default")) {
+        if (!namedClients.containsKey("default")) {
             this.cacheList.add(new JedisCache("default", this.jedisPoolList, cacheStoreJedisHashRouter, serializer, this.expires));
         }
         logger.debug("cacheList:{}", this.cacheList);
@@ -82,7 +82,7 @@ public class JedisCacheManager extends AbstractCacheManager implements Disposabl
     }
 
     private List<JedisPool> createJedisList(String servers) {
-        List<JedisPool> jedisList = new ArrayList<JedisPool>();
+        List<JedisPool> jedisList = new ArrayList<>();
         String[] hostPortPairArray = servers.split(" ");
         for (String hostPortPair : hostPortPairArray) {
             try {

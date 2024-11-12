@@ -20,7 +20,7 @@ public class JsonSerializer implements Serializer {
 
     @Override
     public Object toObject(String string) {
-        if (string == null || string.trim().length() == 0) {
+        if (string == null || string.trim().isEmpty()) {
             return null;
         }
         // 兼容1.1.0

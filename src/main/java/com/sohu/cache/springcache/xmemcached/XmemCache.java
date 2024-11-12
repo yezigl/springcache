@@ -1,5 +1,6 @@
 package com.sohu.cache.springcache.xmemcached;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -49,6 +50,23 @@ public class XmemCache extends AbstractValueAdaptingCache {
     }
 
     @Override
+    public <T> T get(Object key, Callable<T> callable) {
+        Object lookup = lookup(key);
+        if (lookup != null) {
+            return (T) lookup;
+        }
+        if (callable == null) {
+            return null;
+        }
+
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
     public Object lookup(Object key) {
         if (key != null) {
             String uniqueKey = uniqueKey(key);
@@ -56,7 +74,7 @@ public class XmemCache extends AbstractValueAdaptingCache {
                 String valueSerial = memcachedClient.get(uniqueKey);
                 if (valueSerial != null) {
                     Object value = serializer.toObject(valueSerial);
-                    logger.debug("uniqueKey={}, valueSerial={}", new Object[] { uniqueKey, valueSerial });
+                    logger.debug("uniqueKey={}, valueSerial={}", uniqueKey, valueSerial);
                     if (value != null) {
                         logger.debug("Cache {} key {} hit.", name, key);
                         return value;
@@ -82,8 +100,7 @@ public class XmemCache extends AbstractValueAdaptingCache {
             String valueSerial = serializer.toString(value);
             try {
                 boolean result = memcachedClient.set(uniqueKey, expires, valueSerial);
-                logger.debug("uniqueKey={}, expires={}, valueSerial={}, result={}", new Object[] { uniqueKey, expires,
-                        valueSerial, result });
+                logger.debug("uniqueKey={}, expires={}, valueSerial={}, result={}", uniqueKey, expires, valueSerial, result);
             } catch (TimeoutException e) {
                 logger.error("{}", e.getMessage(), e);
             } catch (InterruptedException e) {
@@ -106,7 +123,7 @@ public class XmemCache extends AbstractValueAdaptingCache {
             String uniqueKey = uniqueKey(key);
             try {
                 boolean result = memcachedClient.delete(uniqueKey);
-                logger.debug("uniqueKey={}, result={}", new Object[] { uniqueKey, result });
+                logger.debug("uniqueKey={}, result={}", uniqueKey, result);
             } catch (TimeoutException e) {
                 logger.error("{}", e.getMessage(), e);
             } catch (InterruptedException e) {
@@ -143,6 +160,6 @@ public class XmemCache extends AbstractValueAdaptingCache {
      * @return the unique key with cache name
      */
     private String uniqueKey(Object key) {
-        return new StringBuilder().append(this.name).append("#").append(String.valueOf(key)).toString();
+        return this.name + "#" + key;
     }
 }

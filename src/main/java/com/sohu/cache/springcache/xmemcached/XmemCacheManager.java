@@ -44,11 +44,11 @@ public class XmemCacheManager extends AbstractCacheManager implements Disposable
 
     @Override
     public void afterPropertiesSet() {
-        if (this.namedClients == null || this.namedClients.size() == 0) {
+        if (this.namedClients == null || this.namedClients.isEmpty()) {
             throw new NullPointerException("Property namedClients must be set! Like \"default->127.0.0.1:11211\"");
         }
-        this.cacheList = new ArrayList<Cache>();
-        this.serverList = new ArrayList<InetSocketAddress>();
+        this.cacheList = new ArrayList<>();
+        this.serverList = new ArrayList<>();
         for (Map.Entry<String, String> entry : namedClients.entrySet()) {
             try {
                 List<InetSocketAddress> server = AddrUtil.getAddresses(entry.getValue());
@@ -56,7 +56,7 @@ public class XmemCacheManager extends AbstractCacheManager implements Disposable
                 this.cacheList.add(cache);
                 this.serverList.addAll(server);
             } catch (IOException e) {
-                logger.error("create cache error, name = {}, ex = {}", entry.getKey(), e);
+                logger.error("create cache error, name = {}", entry.getKey(), e);
             }
         }
         if (!namedClients.keySet().contains("default")) {
@@ -64,7 +64,7 @@ public class XmemCacheManager extends AbstractCacheManager implements Disposable
                 Cache cache = new XmemCache("default", getMemcachedClient(serverList), serializer, expires);
                 this.cacheList.add(cache);
             } catch (IOException e) {
-                logger.error("create cache error, name = {}, ex = {}", "default", e);
+                logger.error("create cache error, name = {}", "default", e);
             }
         }
         if (this.serializer == null) {
@@ -83,7 +83,7 @@ public class XmemCacheManager extends AbstractCacheManager implements Disposable
                 addCache(cache);
                 this.cacheList.add(cache);
             } catch (IOException e) {
-                logger.error("create cache error, name = {}, ex = {}", name, e);
+                logger.error("create cache error, name = {}", name, e);
             }
         }
         return cache;

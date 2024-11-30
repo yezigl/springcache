@@ -45,7 +45,7 @@
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-framework.version>4.3.30.RELEASE</spring-framework.version>
+        <spring-framework.version>6.1.14</spring-framework.version>
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.5.12</logback.version>
         <fastjson.version>1.2.83</fastjson.version>
